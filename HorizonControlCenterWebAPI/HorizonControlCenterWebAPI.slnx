@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="HorizonControlCenterBAL/HorizonControlCenterBAL.csproj" />
+  <Project Path="HorizonControlCenterDAL/HorizonControlCenterDAL.csproj" />
+  <Project Path="HorizonControlCenterModels/HorizonControlCenterModels.csproj" />
+  <Project Path="HorizonControlCenterWebAPI.csproj" />
+</Solution>

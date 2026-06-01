@@ -1,0 +1,6 @@
+@HorizonControlCenterWebAPI_HostAddress = http://localhost:5138
+
+GET {{HorizonControlCenterWebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

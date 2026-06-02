@@ -74,7 +74,7 @@ CryptoUtill.key = configVariables.EncKey;
 CryptoUtill.IV = configVariables.EncIV;
 if (environment != "Development")
 {
-    builder.WebHost.UseUrls("http://localhost:5025");
+    builder.WebHost.UseUrls("http://localhost:5000");
 }
 
 app.UsePathBase(new PathString("/horizon-control-center"));

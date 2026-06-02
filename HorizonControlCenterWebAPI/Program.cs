@@ -3,18 +3,8 @@ using HorizonControlCenterDAL.Entities;
 using HorizonControlCenterWebAPI;
 using HorizonControlCenterWebAPI.Security;
 using HorizonControlCenterWebAPI.Services.UserService;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using SecurityAuthorization;
-using Serilog;
-using Serilog.Events;
-using Serilog.Sinks.PostgreSQL.ColumnWriters;
-using System.Reflection;
-using System.Security.Claims;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,7 +74,7 @@ CryptoUtill.key = configVariables.EncKey;
 CryptoUtill.IV = configVariables.EncIV;
 if (environment != "Development")
 {
-    builder.WebHost.UseUrls("http://localhost:5025");
+    builder.WebHost.UseUrls("http://localhost:5000");
 }
 
 app.UsePathBase(new PathString("/horizon-control-center"));

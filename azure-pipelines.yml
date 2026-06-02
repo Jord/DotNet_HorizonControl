@@ -1,0 +1,31 @@
+# This block defines the repository location of the templates
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: Jord/azure-pipelines-templates
+      endpoint: Jord
+      ref: refs/heads/dotnet-main-branch
+
+# Triggers need to be defined
+trigger:
+  branches:
+    include:
+      - main
+
+# A Pull Request Build will run for any PR targeting the following branches
+pr:
+  - main
+
+# Specify to use the base dotnet template - uncomment parameters and provide appropriate values
+extends:
+  template: dotnet/dotnet-base.yml@templates
+  parameters:
+    solutionName: HorizonControlCenterWebAPI
+    nugetConfigPath: NuGet.config
+    runUnitTests: false
+    runIntegrationTests: false
+    deploymentBranches:
+      development: main
+      testing: main
+      production: main

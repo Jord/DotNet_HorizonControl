@@ -2,7 +2,7 @@
 
 ## Merging and Deployment Strategy
 
-> Please do not use `master`, `uat` or `development branches
+> Please do not use `master`, `uat` or `development` branches
 
 This repository is configured with a single `main` branch that represents the latest deployable version of the software.
 

@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="16.1.1" />
+	 
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="CentralLogUtilities" Version="2026.4.22.2" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.18" />
@@ -25,6 +26,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HorizonControlCenterModels\HorizonControlCenterModels.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Entities\" />
   </ItemGroup>
 
   <PropertyGroup>

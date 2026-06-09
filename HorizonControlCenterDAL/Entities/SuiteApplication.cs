@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace HorizonControlCenterDAL.Entities;
 
-public partial class SuitesApplication
+public partial class SuiteApplication
 {
     public Guid GuidId { get; set; }
 
@@ -23,5 +23,5 @@ public partial class SuitesApplication
 
     public Guid SuiteId { get; set; }
 
-    public int ApplicationType { get; set; }
+    public string? ApplicationType { get; set; }
 }

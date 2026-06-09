@@ -7,7 +7,7 @@ namespace HorizonControlCenterWebAPI
     {
         public static void RegisterAutoMapper(this IServiceCollection services)
         {
-            // Get assemblies that contain AutoMapper profiles
+           // Get assemblies that contain AutoMapper profiles
             var assemblies = new[]
             {
                 Assembly.GetExecutingAssembly(), // WebAPI

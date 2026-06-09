@@ -3,13 +3,11 @@ using System.Collections.Generic;
 
 namespace HorizonControlCenterDAL.Entities;
 
-public partial class GroupRoleMapping
+public partial class GroupRole
 {
     public Guid GuidD { get; set; }
 
-    public Guid? SuiteId { get; set; }
-
-    public Guid? SuitesapplicationId { get; set; }
+    public Guid? SuiteApplicationId { get; set; }
 
     public string? GroupName { get; set; }
 

@@ -3,11 +3,13 @@ using System.Collections.Generic;
 
 namespace HorizonControlCenterDAL.Entities;
 
-public partial class GroupCategory
+public partial class GroupGroup
 {
     public Guid GuidId { get; set; }
 
-    public string? Name { get; set; }
+    public Guid GroupId { get; set; }
+
+    public Guid MapToGroupId { get; set; }
 
     public int? CreatedByUserId { get; set; }
 

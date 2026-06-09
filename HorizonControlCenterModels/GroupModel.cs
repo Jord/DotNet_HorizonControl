@@ -25,7 +25,5 @@ namespace HorizonControlCenterModels
         public DateTime LastUpdatedDate { get; set; }
 
         public string GroupType { get; set; } = null!;
-
-        public Guid? SuiteApplicationId { get; set; }
     }
 }

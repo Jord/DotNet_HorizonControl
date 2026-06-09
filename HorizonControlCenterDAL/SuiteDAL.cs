@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using HorizonControlCenterDAL.Entities;
+using HorizonControlCenterDAL.Interfaces;
 using HorizonControlCenterModels;
 using HorizonControlCenterModels.DTO;
 using Microsoft.AspNetCore.Http;
@@ -14,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace HorizonControlCenterDAL
 {
-    public class SuiteDAL
+    public class SuiteDAL : ISuiteDAL
     {
         private readonly horizoncontrolContext _context;
         private readonly IMapper _mapper;
@@ -71,6 +72,33 @@ namespace HorizonControlCenterDAL
                 throw;
             }
 
+        }
+
+        public async Task<SuiteModel?> GetExistingSuiteAsync(SuitesDTO model)
+        {
+            const string methodName = nameof(GetExistingSuiteAsync);
+            try
+            {
+                var existingEntity = await _context.Suites
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(s =>
+                        (model.SuiteName != null && s.SuiteName == model.SuiteName) ||
+                        (model.SuiteCode != null && s.SuiteCode == model.SuiteCode));
+
+                if (existingEntity != null)
+                {
+                    Log.ForContext("classname", _className)
+                       .ForContext("method_name", methodName)
+                       .Information("Existing suite found with SuiteName or SuiteCode at {Time}", DateTime.Now);
+                }
+
+                return existingEntity == null ? null : _mapper.Map<SuiteModel>(existingEntity);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error occurred in {MethodName}", methodName);
+                throw;
+            }
         }
 
         //public async Task<SuiteModel> CreateAsync(SecurityPostModel model, int userId)
@@ -231,7 +259,7 @@ namespace HorizonControlCenterDAL
                 throw;
             }
         }
-        public async Task<int> DeleteAsync(Guid id)
+        public async Task<int> DeleteAsync(Guid id, int userId)
         {
             const string methodName = nameof(DeleteAsync);
 
@@ -248,6 +276,7 @@ namespace HorizonControlCenterDAL
 
                 // ✅ Soft delete
                 entity.IsActive = false;
+                entity.LastUpdatedByUserId = userId;
                 entity.LastUpdatedDate = DateTime.UtcNow;
 
                 entity.DeActiveRemark = "Deleted";
@@ -259,6 +288,39 @@ namespace HorizonControlCenterDAL
                    .ForContext("method_name", methodName)
                    .ForContext("thrown_by", "Application")
                    .Information("Soft deleted record with GuidId {Id} at {Time}", id, DateTime.Now);
+
+                return 1; // Success
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error in {MethodName}", methodName);
+                throw;
+            }
+        }
+
+        public async Task<int> PermanentDeleteAsync(Guid id)
+        {
+            const string methodName = nameof(PermanentDeleteAsync);
+
+            try
+            {
+                var entity = await _context.Suites
+                    .Where(j => j.GuidId == id)
+                    .FirstOrDefaultAsync();
+
+                if (entity == null)
+                {
+                    return 0; // Not found
+                }
+
+                // ✅ Permanent delete
+                _context.Suites.Remove(entity);
+                await _context.SaveChangesAsync();
+
+                Log.ForContext("classname", _className)
+                   .ForContext("method_name", methodName)
+                   .ForContext("thrown_by", "Application")
+                   .Information("Permanently deleted record with GuidId {Id} at {Time}", id, DateTime.Now);
 
                 return 1; // Success
             }

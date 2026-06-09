@@ -11,8 +11,6 @@ public partial class UserGroup
 
     public Guid? GroupId { get; set; }
 
-    public Guid? MapToGroupId { get; set; }
-
     public int? CreatedByUserId { get; set; }
 
     public DateTime? CreationDate { get; set; }
@@ -21,5 +19,5 @@ public partial class UserGroup
 
     public DateTime? LastUpdatedDate { get; set; }
 
-    public string? MappingType { get; set; }
+    public bool? IsActive { get; set; }
 }

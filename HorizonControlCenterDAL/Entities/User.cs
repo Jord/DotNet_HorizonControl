@@ -15,8 +15,6 @@ public partial class User
 
     public string? Email { get; set; }
 
-    public string? Authentication { get; set; }
-
     public int? CreatedByUserId { get; set; }
 
     public DateTime? CreationDate { get; set; }
@@ -25,11 +23,7 @@ public partial class User
 
     public DateTime? LastUpdatedDate { get; set; }
 
-    public string? UserAccountType { get; set; }
-
-    public string? Password { get; set; }
-
     public string? Remarks { get; set; }
 
-    public string? UserType { get; set; }
+    public bool? IsActive { get; set; }
 }

@@ -13,21 +13,17 @@ public partial class horizoncontrolContext : DbContext
 
     public virtual DbSet<Group> Groups { get; set; }
 
-    public virtual DbSet<GroupCategory> GroupCategories { get; set; }
+    public virtual DbSet<GroupGroup> GroupGroups { get; set; }
 
-    public virtual DbSet<GroupRoleMapping> GroupRoleMappings { get; set; }
-
-    public virtual DbSet<GroupWithCategoryView> GroupWithCategoryViews { get; set; }
+    public virtual DbSet<GroupRole> GroupRoles { get; set; }
 
     public virtual DbSet<Suite> Suites { get; set; }
 
-    public virtual DbSet<SuitesApplication> SuitesApplications { get; set; }
+    public virtual DbSet<SuiteApplication> SuiteApplications { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserGroup> UserGroups { get; set; }
-
-    public virtual DbSet<UserGroupView> UserGroupViews { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,14 +31,15 @@ public partial class horizoncontrolContext : DbContext
         {
             entity.HasKey(e => e.GuidId).HasName("group_pkey");
 
-            entity.ToTable("group", "hcc");
+            entity.ToTable("group");
+
+            entity.HasIndex(e => e.Name, "name_uk").IsUnique();
 
             entity.Property(e => e.GuidId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("guid_id");
             entity.Property(e => e.CreatedByUserId).HasColumnName("created_by_user_id");
             entity.Property(e => e.CreationDate).HasColumnName("creation_date");
-            entity.Property(e => e.GroupCategoryId).HasColumnName("group_category_id");
             entity.Property(e => e.GroupType)
                 .HasColumnType("character varying")
                 .HasColumnName("group_type");
@@ -55,29 +52,34 @@ public partial class horizoncontrolContext : DbContext
             entity.Property(e => e.Remarks).HasColumnName("remarks");
         });
 
-        modelBuilder.Entity<GroupCategory>(entity =>
+        modelBuilder.Entity<GroupGroup>(entity =>
         {
-            entity.HasKey(e => e.GuidId).HasName("group_category_pkey");
+            entity.HasKey(e => e.GuidId).HasName("group_group_pkey");
 
-            entity.ToTable("group_category", "hcc");
+            entity.ToTable("group_group");
+
+            entity.HasIndex(e => new { e.GroupId, e.MapToGroupId }, "group_to_group_ids_uk").IsUnique();
 
             entity.Property(e => e.GuidId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("guid_id");
             entity.Property(e => e.CreatedByUserId).HasColumnName("created_by_user_id");
-            entity.Property(e => e.CreationDate).HasColumnName("creation_date");
+            entity.Property(e => e.CreationDate)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("creation_date");
+            entity.Property(e => e.GroupId).HasColumnName("group_id");
             entity.Property(e => e.LastUpdatedByUserId).HasColumnName("last_updated_by_user_id");
             entity.Property(e => e.LastUpdatedDate).HasColumnName("last_updated_date");
-            entity.Property(e => e.Name)
-                .HasMaxLength(500)
-                .HasColumnName("name");
+            entity.Property(e => e.MapToGroupId).HasColumnName("map_to_group_id");
         });
 
-        modelBuilder.Entity<GroupRoleMapping>(entity =>
+        modelBuilder.Entity<GroupRole>(entity =>
         {
             entity.HasKey(e => e.GuidD).HasName("group_role_mapping_pkey");
 
-            entity.ToTable("group_role_mapping", "hcc");
+            entity.ToTable("group_role");
+
+            entity.HasIndex(e => e.GroupName, "group_name_uk").IsUnique();
 
             entity.Property(e => e.GuidD)
                 .HasDefaultValueSql("gen_random_uuid()")
@@ -94,40 +96,16 @@ public partial class horizoncontrolContext : DbContext
             entity.Property(e => e.Remarks)
                 .HasColumnType("character varying")
                 .HasColumnName("remarks");
-            entity.Property(e => e.SuiteId).HasColumnName("suite_id");
-            entity.Property(e => e.SuitesapplicationId).HasColumnName("suitesapplication_id");
-        });
-
-        modelBuilder.Entity<GroupWithCategoryView>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToView("group_with_category_view", "hcc");
-
-            entity.Property(e => e.Category)
-                .HasMaxLength(500)
-                .HasColumnName("category");
-            entity.Property(e => e.CreatedByUserId).HasColumnName("created_by_user_id");
-            entity.Property(e => e.CreationDate).HasColumnName("creation_date");
-            entity.Property(e => e.GroupCategoryId).HasColumnName("group_category_id");
-            entity.Property(e => e.GroupType)
-                .HasColumnType("character varying")
-                .HasColumnName("group_type");
-            entity.Property(e => e.GuidId).HasColumnName("guid_id");
-            entity.Property(e => e.IsActive).HasColumnName("is_active");
-            entity.Property(e => e.LastUpdatedByUserId).HasColumnName("last_updated_by_user_id");
-            entity.Property(e => e.LastUpdatedDate).HasColumnName("last_updated_date");
-            entity.Property(e => e.Name)
-                .HasMaxLength(500)
-                .HasColumnName("name");
-            entity.Property(e => e.Remarks).HasColumnName("remarks");
+            entity.Property(e => e.SuiteApplicationId).HasColumnName("suite_application_id");
         });
 
         modelBuilder.Entity<Suite>(entity =>
         {
             entity.HasKey(e => e.GuidId).HasName("suite_pkey");
 
-            entity.ToTable("suites", "hcc");
+            entity.ToTable("suite");
+
+            entity.HasIndex(e => e.SuiteName, "Suite_uk").IsUnique();
 
             entity.Property(e => e.GuidId)
                 .HasDefaultValueSql("gen_random_uuid()")
@@ -151,16 +129,20 @@ public partial class horizoncontrolContext : DbContext
                 .HasColumnName("suite_name");
         });
 
-        modelBuilder.Entity<SuitesApplication>(entity =>
+        modelBuilder.Entity<SuiteApplication>(entity =>
         {
             entity.HasKey(e => e.GuidId).HasName("suites_application_pkey");
 
-            entity.ToTable("suites_application", "hcc");
+            entity.ToTable("suite_application");
+
+            entity.HasIndex(e => e.SuiteApplicationName, "suite_app_name_uk").IsUnique();
 
             entity.Property(e => e.GuidId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("guid_id");
-            entity.Property(e => e.ApplicationType).HasColumnName("application_type");
+            entity.Property(e => e.ApplicationType)
+                .HasColumnType("character varying")
+                .HasColumnName("application_type");
             entity.Property(e => e.CreateByUserId).HasColumnName("create_by_user_id");
             entity.Property(e => e.CreationDate).HasColumnName("creation_date");
             entity.Property(e => e.IsActive).HasColumnName("is_active");
@@ -177,33 +159,28 @@ public partial class horizoncontrolContext : DbContext
         {
             entity.HasKey(e => e.GuidId).HasName("user_pkey");
 
-            entity.ToTable("user", "hcc");
+            entity.ToTable("user");
+
+            entity.HasIndex(e => e.WindowsUserName, "windows_user_name_uk").IsUnique();
 
             entity.Property(e => e.GuidId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("guid_id");
-            entity.Property(e => e.Authentication)
-                .HasMaxLength(100)
-                .HasColumnName("authentication");
             entity.Property(e => e.CreatedByUserId).HasColumnName("created_by_user_id");
-            entity.Property(e => e.CreationDate).HasColumnName("creation_date");
+            entity.Property(e => e.CreationDate)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("creation_date");
             entity.Property(e => e.Email).HasColumnName("email");
             entity.Property(e => e.EmployeeId).HasColumnName("employee_id");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.Property(e => e.LastUpdatedByUserId).HasColumnName("last_updated_by_user_id");
             entity.Property(e => e.LastUpdatedDate).HasColumnName("last_updated_date");
-            entity.Property(e => e.Password).HasColumnName("password");
             entity.Property(e => e.Remarks)
                 .HasColumnType("character varying")
                 .HasColumnName("remarks");
-            entity.Property(e => e.UserAccountType)
-                .HasColumnType("character varying")
-                .HasColumnName("user_account_type");
             entity.Property(e => e.UserFullName)
                 .HasMaxLength(500)
                 .HasColumnName("user_full_name");
-            entity.Property(e => e.UserType)
-                .HasColumnType("character varying")
-                .HasColumnName("user_type");
             entity.Property(e => e.WindowsUserName)
                 .HasMaxLength(500)
                 .HasColumnName("windows_user_name");
@@ -213,49 +190,21 @@ public partial class horizoncontrolContext : DbContext
         {
             entity.HasKey(e => e.GuidId).HasName("user_group_pkey");
 
-            entity.ToTable("user_group", "hcc");
+            entity.ToTable("user_group");
+
+            entity.HasIndex(e => new { e.UserId, e.GroupId }, "user_group_ids_uk").IsUnique();
 
             entity.Property(e => e.GuidId)
                 .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("guid_id");
             entity.Property(e => e.CreatedByUserId).HasColumnName("created_by_user_id");
-            entity.Property(e => e.CreationDate).HasColumnName("creation_date");
+            entity.Property(e => e.CreationDate)
+                .HasDefaultValueSql("now()")
+                .HasColumnName("creation_date");
             entity.Property(e => e.GroupId).HasColumnName("group_id");
+            entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.Property(e => e.LastUpdatedByUserId).HasColumnName("last_updated_by_user_id");
             entity.Property(e => e.LastUpdatedDate).HasColumnName("last_updated_date");
-            entity.Property(e => e.MapToGroupId).HasColumnName("map_to_group_id");
-            entity.Property(e => e.MappingType)
-                .HasMaxLength(100)
-                .HasColumnName("mapping_type");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-        });
-
-        modelBuilder.Entity<UserGroupView>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToView("user_group_view", "hcc");
-
-            entity.Property(e => e.CreatedByUserId).HasColumnName("created_by_user_id");
-            entity.Property(e => e.CreationDate).HasColumnName("creation_date");
-            entity.Property(e => e.Email).HasColumnName("email");
-            entity.Property(e => e.GroupId).HasColumnName("group_id");
-            entity.Property(e => e.GroupType)
-                .HasColumnType("character varying")
-                .HasColumnName("group_type");
-            entity.Property(e => e.GuidId).HasColumnName("guid_id");
-            entity.Property(e => e.LastUpdatedByUserId).HasColumnName("last_updated_by_user_id");
-            entity.Property(e => e.LastUpdatedDate).HasColumnName("last_updated_date");
-            entity.Property(e => e.MapGroupName)
-                .HasMaxLength(500)
-                .HasColumnName("map_group_name");
-            entity.Property(e => e.MapToGroupId).HasColumnName("map_to_group_id");
-            entity.Property(e => e.MappingType)
-                .HasMaxLength(100)
-                .HasColumnName("mapping_type");
-            entity.Property(e => e.Name)
-                .HasMaxLength(500)
-                .HasColumnName("name");
             entity.Property(e => e.UserId).HasColumnName("user_id");
         });
 

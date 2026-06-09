@@ -1,5 +1,6 @@
 using AutoMapper;
 using HorizonControlCenterDAL.Entities;
+using HorizonControlCenterDAL.Interfaces;
 using HorizonControlCenterModels;
 using HorizonControlCenterModels.DTO;
 using Microsoft.AspNetCore.Http;
@@ -14,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace HorizonControlCenterDAL
 {
-    public class SuitesApplicationDAL
+    public class SuitesApplicationDAL : ISuitesApplicationDAL
     {
         private readonly horizoncontrolContext _context;
         private readonly IMapper _mapper;
@@ -32,7 +33,7 @@ namespace HorizonControlCenterDAL
             const string methodName = nameof(GetAllAsync);
             try
             {
-                var data = await _context.SuitesApplications.AsNoTracking().ToListAsync();
+                var data = await _context.SuiteApplications.AsNoTracking().ToListAsync();
 
                 Log.ForContext("classname", _className)
                     .ForContext("method_name", methodName)
@@ -53,7 +54,7 @@ namespace HorizonControlCenterDAL
             const string methodName = nameof(GetByIdAsync);
             try
             {
-                var entity = await _context.SuitesApplications
+                var entity = await _context.SuiteApplications
                             .FirstOrDefaultAsync(j => j.GuidId == id);
 
                 Log.ForContext("classname", _className)
@@ -70,6 +71,31 @@ namespace HorizonControlCenterDAL
             }
         }
 
+        public async Task<SuitesApplicationModel?> GetExistingApplicationAsync(SuitesApplicationDTO model)
+        {
+            const string methodName = nameof(GetExistingApplicationAsync);
+            try
+            {
+                var existingEntity = await _context.SuiteApplications
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(s => model.ApplicationName != null && s.SuiteApplicationName == model.ApplicationName);
+
+                if (existingEntity != null)
+                {
+                    Log.ForContext("classname", _className)
+                       .ForContext("method_name", methodName)
+                       .Information("Existing application found with ApplicationName at {Time}", DateTime.Now);
+                }
+
+                return existingEntity == null ? null : _mapper.Map<SuitesApplicationModel>(existingEntity);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error occurred in {MethodName}", methodName);
+                throw;
+            }
+        }
+
         public async Task<(SuitesApplicationModel result, string message)> CreateAsync(SuitesApplicationDTO model, int userId)
         {
             const string methodName = nameof(CreateAsync);
@@ -77,7 +103,7 @@ namespace HorizonControlCenterDAL
             try
             {
                 var nameExists = model.ApplicationName != null &&
-             await _context.SuitesApplications.AnyAsync(s => s.SuiteApplicationName == model.ApplicationName);
+             await _context.SuiteApplications.AnyAsync(s => s.SuiteApplicationName == model.ApplicationName);
 
                 if (nameExists)
                 {
@@ -91,7 +117,7 @@ namespace HorizonControlCenterDAL
                     return (null, message);
                 }
 
-                var entity = _mapper.Map<SuitesApplication>(model);
+                var entity = _mapper.Map<SuiteApplication>(model);
 
                 entity.CreationDate = DateTime.UtcNow;
                 entity.LastUpdatedDate = DateTime.UtcNow;
@@ -99,7 +125,7 @@ namespace HorizonControlCenterDAL
                 entity.CreateByUserId = userId;
                 entity.LastUpdatedByUserId = userId;
 
-                await _context.SuitesApplications.AddAsync(entity);
+                await _context.SuiteApplications.AddAsync(entity);
                 await _context.SaveChangesAsync();
 
                 return (_mapper.Map<SuitesApplicationModel>(entity), "Created successfully");
@@ -116,7 +142,7 @@ namespace HorizonControlCenterDAL
             const string methodName = nameof(UpdateAsync);
             try
             {
-                var entity = await _context.SuitesApplications
+                var entity = await _context.SuiteApplications
                     .FirstOrDefaultAsync(j => j.GuidId == id);
 
                 if (entity == null)
@@ -141,13 +167,13 @@ namespace HorizonControlCenterDAL
             }
         }
 
-        public async Task<SuitesApplicationModel> PatchAsync(Guid id, JsonPatchDocument<SuitesApplication> patchDoc, int userId)
+        public async Task<SuitesApplicationModel> PatchAsync(Guid id, JsonPatchDocument<SuiteApplication> patchDoc, int userId)
         {
             const string methodName = nameof(PatchAsync);
 
             try
             {
-                var entity = await _context.SuitesApplications
+                var entity = await _context.SuiteApplications
                     .FirstOrDefaultAsync(j => j.GuidId == id);
 
                 if (entity == null)
@@ -169,13 +195,13 @@ namespace HorizonControlCenterDAL
             }
         }
 
-        public async Task<int> DeleteAsync(Guid id)
+        public async Task<int> DeleteAsync(Guid id, int userId)
         {
             const string methodName = nameof(DeleteAsync);
 
             try
             {
-                var entity = await _context.SuitesApplications
+                var entity = await _context.SuiteApplications
                     .Where(j => j.GuidId == id)
                     .FirstOrDefaultAsync();
 
@@ -184,10 +210,12 @@ namespace HorizonControlCenterDAL
                     return 0; // Not found
                 }
 
+                // ? Soft delete
                 entity.IsActive = false;
+                entity.LastUpdatedByUserId = userId;
                 entity.LastUpdatedDate = DateTime.UtcNow;
 
-                _context.SuitesApplications.Update(entity);
+                _context.SuiteApplications.Update(entity);
                 await _context.SaveChangesAsync();
 
                 Log.ForContext("classname", _className)
@@ -204,14 +232,45 @@ namespace HorizonControlCenterDAL
             }
         }
 
+        public async Task<int> PermanentDeleteAsync(Guid id)
+        {
+            const string methodName = nameof(PermanentDeleteAsync);
+
+            try
+            {
+                var entity = await _context.SuiteApplications
+                    .Where(j => j.GuidId == id)
+                    .FirstOrDefaultAsync();
+
+                if (entity == null)
+                {
+                    return 0; // Not found
+                }
+
+                // ? Permanent delete
+                _context.SuiteApplications.Remove(entity);
+                await _context.SaveChangesAsync();
+
+                Log.ForContext("classname", _className)
+                   .ForContext("method_name", methodName)
+                   .ForContext("thrown_by", "Application")
+                   .Information("Permanently deleted record with GuidId {Id} at {Time}", id, DateTime.Now);
+
+                return 1; // Success
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error occurred in {MethodName}", methodName);
+                throw;
+            }
+        }
+
         public async Task<List<string>> GetDistinctApplicationTypesAsync()
         {
             const string methodName = nameof(GetDistinctApplicationTypesAsync);
             try
             {
-                var applicationTypes = Enum.GetValues<HorizonControlCenterModels.Enums.ApplicationType>()
-                    .Select(e => e.ToString())
-                    .ToList();
+                var applicationTypes = HorizonControlCenterModels.Enums.ApplicationType.GetAll();
 
                 Log.ForContext("classname", _className)
                     .ForContext("method_name", methodName)

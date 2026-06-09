@@ -1,81 +1,82 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HorizonControlCenterModels.Enums
 {
     /// <summary>
     /// Defines the types of applications in the suite
     /// </summary>
-    public enum ApplicationType
+    public static class ApplicationType
     {
         /// <summary>
         /// Timesheet application type
         /// </summary>
-        Timesheets = 1,
+        public const string Timesheets = "timesheets";
 
         /// <summary>
         /// Document Management System application type
         /// </summary>
-        DMS = 2,
+        public const string DMS = "dms";
 
         /// <summary>
         /// Globals application type
         /// </summary>
-        Globals = 3,
-
+        public const string Globals = "globals";
 
         /// <summary>
         /// Other application types
         /// </summary>
-        Other = 99
-    }
+        public const string Other = "other";
 
-    /// <summary>
-    /// Helper class for ApplicationType enum operations
-    /// </summary>
-    public static class ApplicationTypeHelper
-    {
         /// <summary>
-        /// Gets the display name for the application type
+        /// Gets all available application types
         /// </summary>
-        public static string GetDisplayName(this ApplicationType applicationType)
+        public static List<string> GetAll()
         {
-            return applicationType switch
+            return new List<string>
             {
-                ApplicationType.Timesheets => "Timesheets",
-                ApplicationType.DMS => "DMS",
-               ApplicationType.Globals => "Globals",
-                ApplicationType.Other => "Other",
-                _ => applicationType.ToString()
+                Timesheets,
+                DMS,
+                Globals,
+                Other
             };
         }
 
         /// <summary>
-        /// Gets all application type display names
+        /// Validates if the given value is a valid application type
         /// </summary>
-        public static List<string> GetAllApplicationTypes()
+        public static bool IsValid(string? value)
         {
-            return Enum.GetValues(typeof(ApplicationType))
-                       .Cast<ApplicationType>()
-                       .Select(x => x.GetDisplayName())
-                       .ToList();
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+
+            return GetAll().Any(x => x.Equals(value, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
-        /// Parses a string to ApplicationType enum
+        /// Normalizes the application type to lowercase
         /// </summary>
-        public static ApplicationType? ParseApplicationType(string value)
+        public static string? Normalize(string? value)
         {
             if (string.IsNullOrWhiteSpace(value))
                 return null;
 
-            if (Enum.TryParse<ApplicationType>(value, true, out var result))
-                return result;
+            var match = GetAll().FirstOrDefault(x => x.Equals(value, StringComparison.OrdinalIgnoreCase));
+            return match;
+        }
 
-            return null;
+        /// <summary>
+        /// Tries to infer application type from application name
+        /// </summary>
+        public static string? InferFromName(string? applicationName)
+        {
+            if (string.IsNullOrWhiteSpace(applicationName))
+                return null;
+
+            var match = GetAll().FirstOrDefault(x => 
+                applicationName.Contains(x, StringComparison.OrdinalIgnoreCase));
+            return match;
         }
     }
 }

@@ -141,5 +141,5 @@ builder.Services.AddCoreServices<horizoncontrolContext>(
 
 builder.Services.AddAppServices(builder.Configuration, builder.Environment);
 
-builder.Build().SetWebApp(builder.Configuration, environment, appName, "horizon-control-center-service");
+builder.Build().SetWebApp(builder.Configuration, environment, appName, "horizon-control-service");
 

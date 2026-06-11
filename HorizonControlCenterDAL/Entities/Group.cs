@@ -22,6 +22,4 @@ public partial class Group
     public DateTime LastUpdatedDate { get; set; }
 
     public string GroupType { get; set; } = null!;
-
-    public Guid? GroupCategoryId { get; set; }
 }

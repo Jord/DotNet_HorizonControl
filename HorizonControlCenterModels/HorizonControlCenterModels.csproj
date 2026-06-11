@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="15.1.3" />
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="CentralLogModels" Version="2026.4.22.2" />
     <PackageReference Include="SecurityAuthorization" Version="2026.3.19.1" />
   </ItemGroup>

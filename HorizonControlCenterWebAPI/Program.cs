@@ -125,7 +125,7 @@ var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
 var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT").ToLower();
 
 string appName = "HorizonControlCenter";
-string dbStringName = "HORIZOCONTROLCENTERDB";
+string dbStringName = "HorizonControlCenterDB";
 
 builder.ConfigureBuilder(environment, appName, "https://dotnethorizonappconfig.azconfig.io");
 

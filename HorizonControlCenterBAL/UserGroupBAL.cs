@@ -36,6 +36,17 @@ namespace HorizonControlCenterBAL
             const string methodName = nameof(CreateAsync);
             try
             {
+                // Validate required properties
+                if (model.UserId == null || model.UserId == Guid.Empty)
+                {
+                    return Custom.CreateError<UserGroupModel>("400", "UserGroup - create - UserId is required and cannot be null or empty", obj: null);
+                }
+
+                if (model.GroupId == null || model.GroupId == Guid.Empty)
+                {
+                    return Custom.CreateError<UserGroupModel>("400", "UserGroup - create - GroupId is required and cannot be null or empty", obj: null);
+                }
+
                 UserGroupModel? existing = await _dal.GetExistingUserGroupAsync(model);
                 if (existing == null)
                 {
@@ -68,6 +79,17 @@ namespace HorizonControlCenterBAL
             const string methodName = nameof(UpdateAsync);
             try
             {
+                // Validate required properties
+                if (model.UserId == null || model.UserId == Guid.Empty)
+                {
+                    return Custom.CreateError<UserGroupModel>("400", "UserGroup - update - UserId is required and cannot be null or empty", obj: null);
+                }
+
+                if (model.GroupId == null || model.GroupId == Guid.Empty)
+                {
+                    return Custom.CreateError<UserGroupModel>("400", "UserGroup - update - GroupId is required and cannot be null or empty", obj: null);
+                }
+
                 var existing = await _dal.GetByIdAsync(id);
                 if (existing == null)
                 {

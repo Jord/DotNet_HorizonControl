@@ -1,5 +1,4 @@
-﻿
-using HorizonControlCenterWebAPI.Security;
+﻿using HorizonControlCenterWebAPI.Security;
 
 namespace HorizonControlCenterWebAPI.Services.UserService
 {
@@ -10,6 +9,8 @@ namespace HorizonControlCenterWebAPI.Services.UserService
         string GetUserFullName();
         string GetUserEmail();
         AuthUser GetUserInfo();
+        string[]? GetRoles();
+        public string[]? Roles { get; set; }
 
     }
 }

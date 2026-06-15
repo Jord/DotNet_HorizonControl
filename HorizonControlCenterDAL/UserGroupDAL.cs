@@ -19,10 +19,10 @@ namespace HorizonControlCenterDAL
         private readonly IMapper _mapper;
         private readonly string _className;
 
-        public UserGroupDAL(IHttpContextAccessor httpContextAccessor, IMapper mapper)
+        public UserGroupDAL(horizoncontrolContext context, IMapper mapper)
         {
-            _context = new horizoncontrolContext(AppConfiguration.ngsqlConnectionOptions());
-            _mapper = mapper;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _className = GetType().Name;
         }
 
@@ -31,14 +31,30 @@ namespace HorizonControlCenterDAL
             const string methodName = nameof(GetAllAsync);
             try
             {
-                var data = await _context.UserGroups.AsNoTracking().ToListAsync();
+                var data = await (from ug in _context.UserGroups
+                                  join u in _context.Users on ug.UserId equals u.GuidId into userJoin
+                                  from u in userJoin.DefaultIfEmpty()
+                                  join g in _context.Groups on ug.GroupId equals g.GuidId into groupJoin
+                                  from g in groupJoin.DefaultIfEmpty()
+                                  select new UserGroupModel
+                                  {
+                                      GuidId = ug.GuidId,
+                                      UserId = ug.UserId,
+                                      GroupId = ug.GroupId,
+                                      CreatedByUserId = ug.CreatedByUserId,
+                                      CreationDate = ug.CreationDate,
+                                      LastUpdatedByUserId = ug.LastUpdatedByUserId,
+                                      LastUpdatedDate = ug.LastUpdatedDate,
+                                      UserName = u != null ? u.UserFullName : null,
+                                      GroupName = g != null ? g.Name : null
+                                  }).AsNoTracking().ToListAsync();
 
                 Log.ForContext("classname", _className)
                     .ForContext("method_name", methodName)
                     .ForContext("thrown_by", "Application")
                     .Information("Executed {MethodName} at {Time}", methodName, DateTime.Now);
 
-                return _mapper.Map<List<UserGroupModel>>(data);
+                return data;
             }
             catch (Exception ex)
             {
@@ -52,15 +68,31 @@ namespace HorizonControlCenterDAL
             const string methodName = nameof(GetByIdAsync);
             try
             {
-                var entity = await _context.UserGroups
-                            .FirstOrDefaultAsync(j => j.GuidId == id);
+                var entity = await (from ug in _context.UserGroups
+                                    join u in _context.Users on ug.UserId equals u.GuidId into userJoin
+                                    from u in userJoin.DefaultIfEmpty()
+                                    join g in _context.Groups on ug.GroupId equals g.GuidId into groupJoin
+                                    from g in groupJoin.DefaultIfEmpty()
+                                    where ug.GuidId == id
+                                    select new UserGroupModel
+                                    {
+                                        GuidId = ug.GuidId,
+                                        UserId = ug.UserId,
+                                        GroupId = ug.GroupId,
+                                        CreatedByUserId = ug.CreatedByUserId,
+                                        CreationDate = ug.CreationDate,
+                                        LastUpdatedByUserId = ug.LastUpdatedByUserId,
+                                        LastUpdatedDate = ug.LastUpdatedDate,
+                                        UserName = u != null ? u.UserFullName : null,
+                                        GroupName = g != null ? g.Name : null
+                                    }).FirstOrDefaultAsync();
 
                 Log.ForContext("classname", _className)
                    .ForContext("method_name", methodName)
                    .ForContext("thrown_by", "Application")
                    .Information("Executed {MethodName} at {Time}", methodName, DateTime.Now);
 
-                return entity == null ? null : _mapper.Map<UserGroupModel>(entity);
+                return entity;
             }
             catch (Exception ex)
             {
@@ -74,9 +106,24 @@ namespace HorizonControlCenterDAL
             const string methodName = nameof(GetExistingUserGroupAsync);
             try
             {
-                var existingEntity = await _context.UserGroups
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(s => s.UserId == model.UserId && s.GroupId == model.GroupId);
+                var existingEntity = await (from ug in _context.UserGroups
+                                             join u in _context.Users on ug.UserId equals u.GuidId into userJoin
+                                             from u in userJoin.DefaultIfEmpty()
+                                             join g in _context.Groups on ug.GroupId equals g.GuidId into groupJoin
+                                             from g in groupJoin.DefaultIfEmpty()
+                                             where ug.UserId == model.UserId && ug.GroupId == model.GroupId
+                                             select new UserGroupModel
+                                             {
+                                                 GuidId = ug.GuidId,
+                                                 UserId = ug.UserId,
+                                                 GroupId = ug.GroupId,
+                                                 CreatedByUserId = ug.CreatedByUserId,
+                                                 CreationDate = ug.CreationDate,
+                                                 LastUpdatedByUserId = ug.LastUpdatedByUserId,
+                                                 LastUpdatedDate = ug.LastUpdatedDate,
+                                                 UserName = u != null ? u.UserFullName : null,
+                                                 GroupName = g != null ? g.Name : null
+                                             }).AsNoTracking().FirstOrDefaultAsync();
 
                 if (existingEntity != null)
                 {
@@ -85,7 +132,7 @@ namespace HorizonControlCenterDAL
                        .Information("Existing UserGroup found at {Time}", DateTime.Now);
                 }
 
-                return existingEntity == null ? null : _mapper.Map<UserGroupModel>(existingEntity);
+                return existingEntity;
             }
             catch (Exception ex)
             {
@@ -124,7 +171,27 @@ namespace HorizonControlCenterDAL
                 await _context.UserGroups.AddAsync(entity);
                 await _context.SaveChangesAsync();
 
-                return (_mapper.Map<UserGroupModel>(entity), "Created successfully");
+                // Fetch the created entity with joined data
+                var createdEntity = await (from ug in _context.UserGroups
+                                           join u in _context.Users on ug.UserId equals u.GuidId into userJoin
+                                           from u in userJoin.DefaultIfEmpty()
+                                           join g in _context.Groups on ug.GroupId equals g.GuidId into groupJoin
+                                           from g in groupJoin.DefaultIfEmpty()
+                                           where ug.GuidId == entity.GuidId
+                                           select new UserGroupModel
+                                           {
+                                               GuidId = ug.GuidId,
+                                               UserId = ug.UserId,
+                                               GroupId = ug.GroupId,
+                                               CreatedByUserId = ug.CreatedByUserId,
+                                               CreationDate = ug.CreationDate,
+                                               LastUpdatedByUserId = ug.LastUpdatedByUserId,
+                                               LastUpdatedDate = ug.LastUpdatedDate,
+                                               UserName = u != null ? u.UserFullName : null,
+                                               GroupName = g != null ? g.Name : null
+                                           }).FirstOrDefaultAsync();
+
+                return (createdEntity, "Created successfully");
             }
             catch (Exception ex)
             {
@@ -154,7 +221,27 @@ namespace HorizonControlCenterDAL
 
                 await _context.SaveChangesAsync();
 
-                return _mapper.Map<UserGroupModel>(entity);
+                // Fetch the updated entity with joined data
+                var updatedEntity = await (from ug in _context.UserGroups
+                                           join u in _context.Users on ug.UserId equals u.GuidId into userJoin
+                                           from u in userJoin.DefaultIfEmpty()
+                                           join g in _context.Groups on ug.GroupId equals g.GuidId into groupJoin
+                                           from g in groupJoin.DefaultIfEmpty()
+                                           where ug.GuidId == id
+                                           select new UserGroupModel
+                                           {
+                                               GuidId = ug.GuidId,
+                                               UserId = ug.UserId,
+                                               GroupId = ug.GroupId,
+                                               CreatedByUserId = ug.CreatedByUserId,
+                                               CreationDate = ug.CreationDate,
+                                               LastUpdatedByUserId = ug.LastUpdatedByUserId,
+                                               LastUpdatedDate = ug.LastUpdatedDate,
+                                               UserName = u != null ? u.UserFullName : null,
+                                               GroupName = g != null ? g.Name : null
+                                           }).FirstOrDefaultAsync();
+
+                return updatedEntity;
             }
             catch (Exception ex)
             {

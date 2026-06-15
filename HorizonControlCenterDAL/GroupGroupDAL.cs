@@ -5,6 +5,7 @@ using HorizonControlCenterModels;
 using HorizonControlCenterModels.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -19,10 +20,10 @@ namespace HorizonControlCenterDAL
         private readonly IMapper _mapper;
         private readonly string _className;
 
-        public GroupGroupDAL(IHttpContextAccessor httpContextAccessor, IMapper mapper)
+        public GroupGroupDAL(horizoncontrolContext context, IMapper mapper)
         {
-            _context = new horizoncontrolContext(AppConfiguration.ngsqlConnectionOptions());
-            _mapper = mapper;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _className = GetType().Name;
         }
 
@@ -31,14 +32,30 @@ namespace HorizonControlCenterDAL
             const string methodName = nameof(GetAllAsync);
             try
             {
-                var data = await _context.GroupGroups.AsNoTracking().ToListAsync();
+                var data = await (from gg in _context.GroupGroups
+                                  join g1 in _context.Groups on gg.GroupId equals g1.GuidId into group1Join
+                                  from g1 in group1Join.DefaultIfEmpty()
+                                  join g2 in _context.Groups on gg.MapToGroupId equals g2.GuidId into group2Join
+                                  from g2 in group2Join.DefaultIfEmpty()
+                                  select new GroupGroupModel
+                                  {
+                                      GuidId = gg.GuidId,
+                                      GroupId = gg.GroupId,
+                                      MapToGroupId = gg.MapToGroupId,
+                                      CreatedByUserId = gg.CreatedByUserId,
+                                      CreationDate = gg.CreationDate,
+                                      LastUpdatedByUserId = gg.LastUpdatedByUserId,
+                                      LastUpdatedDate = gg.LastUpdatedDate,
+                                      GroupName = g1 != null ? g1.Name : null,
+                                      MapToGroupName = g2 != null ? g2.Name : null
+                                  }).AsNoTracking().ToListAsync();
 
                 Log.ForContext("classname", _className)
                     .ForContext("method_name", methodName)
                     .ForContext("thrown_by", "Application")
                     .Information("Executed {MethodName} at {Time}", methodName, DateTime.Now);
 
-                return _mapper.Map<List<GroupGroupModel>>(data);
+                return data;
             }
             catch (Exception ex)
             {
@@ -52,15 +69,31 @@ namespace HorizonControlCenterDAL
             const string methodName = nameof(GetByIdAsync);
             try
             {
-                var entity = await _context.GroupGroups
-                            .FirstOrDefaultAsync(j => j.GuidId == id);
+                var entity = await (from gg in _context.GroupGroups
+                                    join g1 in _context.Groups on gg.GroupId equals g1.GuidId into group1Join
+                                    from g1 in group1Join.DefaultIfEmpty()
+                                    join g2 in _context.Groups on gg.MapToGroupId equals g2.GuidId into group2Join
+                                    from g2 in group2Join.DefaultIfEmpty()
+                                    where gg.GuidId == id
+                                    select new GroupGroupModel
+                                    {
+                                        GuidId = gg.GuidId,
+                                        GroupId = gg.GroupId,
+                                        MapToGroupId = gg.MapToGroupId,
+                                        CreatedByUserId = gg.CreatedByUserId,
+                                        CreationDate = gg.CreationDate,
+                                        LastUpdatedByUserId = gg.LastUpdatedByUserId,
+                                        LastUpdatedDate = gg.LastUpdatedDate,
+                                        GroupName = g1 != null ? g1.Name : null,
+                                        MapToGroupName = g2 != null ? g2.Name : null
+                                    }).FirstOrDefaultAsync();
 
                 Log.ForContext("classname", _className)
                    .ForContext("method_name", methodName)
                    .ForContext("thrown_by", "Application")
                    .Information("Executed {MethodName} at {Time}", methodName, DateTime.Now);
 
-                return entity == null ? null : _mapper.Map<GroupGroupModel>(entity);
+                return entity;
             }
             catch (Exception ex)
             {
@@ -74,9 +107,24 @@ namespace HorizonControlCenterDAL
             const string methodName = nameof(GetExistingGroupGroupAsync);
             try
             {
-                var existingEntity = await _context.GroupGroups
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(s => s.GroupId == model.GroupId && s.MapToGroupId == model.MapToGroupId);
+                var existingEntity = await (from gg in _context.GroupGroups
+                                             join g1 in _context.Groups on gg.GroupId equals g1.GuidId into group1Join
+                                             from g1 in group1Join.DefaultIfEmpty()
+                                             join g2 in _context.Groups on gg.MapToGroupId equals g2.GuidId into group2Join
+                                             from g2 in group2Join.DefaultIfEmpty()
+                                             where gg.GroupId == model.GroupId && gg.MapToGroupId == model.MapToGroupId
+                                             select new GroupGroupModel
+                                             {
+                                                 GuidId = gg.GuidId,
+                                                 GroupId = gg.GroupId,
+                                                 MapToGroupId = gg.MapToGroupId,
+                                                 CreatedByUserId = gg.CreatedByUserId,
+                                                 CreationDate = gg.CreationDate,
+                                                 LastUpdatedByUserId = gg.LastUpdatedByUserId,
+                                                 LastUpdatedDate = gg.LastUpdatedDate,
+                                                 GroupName = g1 != null ? g1.Name : null,
+                                                 MapToGroupName = g2 != null ? g2.Name : null
+                                             }).AsNoTracking().FirstOrDefaultAsync();
 
                 if (existingEntity != null)
                 {
@@ -85,7 +133,7 @@ namespace HorizonControlCenterDAL
                        .Information("Existing GroupGroup found at {Time}", DateTime.Now);
                 }
 
-                return existingEntity == null ? null : _mapper.Map<GroupGroupModel>(existingEntity);
+                return existingEntity;
             }
             catch (Exception ex)
             {
@@ -124,7 +172,27 @@ namespace HorizonControlCenterDAL
                 await _context.GroupGroups.AddAsync(entity);
                 await _context.SaveChangesAsync();
 
-                return (_mapper.Map<GroupGroupModel>(entity), "Created successfully");
+                // Fetch the created entity with joined data
+                var createdEntity = await (from gg in _context.GroupGroups
+                                           join g1 in _context.Groups on gg.GroupId equals g1.GuidId into group1Join
+                                           from g1 in group1Join.DefaultIfEmpty()
+                                           join g2 in _context.Groups on gg.MapToGroupId equals g2.GuidId into group2Join
+                                           from g2 in group2Join.DefaultIfEmpty()
+                                           where gg.GuidId == entity.GuidId
+                                           select new GroupGroupModel
+                                           {
+                                               GuidId = gg.GuidId,
+                                               GroupId = gg.GroupId,
+                                               MapToGroupId = gg.MapToGroupId,
+                                               CreatedByUserId = gg.CreatedByUserId,
+                                               CreationDate = gg.CreationDate,
+                                               LastUpdatedByUserId = gg.LastUpdatedByUserId,
+                                               LastUpdatedDate = gg.LastUpdatedDate,
+                                               GroupName = g1 != null ? g1.Name : null,
+                                               MapToGroupName = g2 != null ? g2.Name : null
+                                           }).FirstOrDefaultAsync();
+
+                return (createdEntity, "Created successfully");
             }
             catch (Exception ex)
             {
@@ -154,7 +222,27 @@ namespace HorizonControlCenterDAL
 
                 await _context.SaveChangesAsync();
 
-                return _mapper.Map<GroupGroupModel>(entity);
+                // Fetch the updated entity with joined data
+                var updatedEntity = await (from gg in _context.GroupGroups
+                                           join g1 in _context.Groups on gg.GroupId equals g1.GuidId into group1Join
+                                           from g1 in group1Join.DefaultIfEmpty()
+                                           join g2 in _context.Groups on gg.MapToGroupId equals g2.GuidId into group2Join
+                                           from g2 in group2Join.DefaultIfEmpty()
+                                           where gg.GuidId == id
+                                           select new GroupGroupModel
+                                           {
+                                               GuidId = gg.GuidId,
+                                               GroupId = gg.GroupId,
+                                               MapToGroupId = gg.MapToGroupId,
+                                               CreatedByUserId = gg.CreatedByUserId,
+                                               CreationDate = gg.CreationDate,
+                                               LastUpdatedByUserId = gg.LastUpdatedByUserId,
+                                               LastUpdatedDate = gg.LastUpdatedDate,
+                                               GroupName = g1 != null ? g1.Name : null,
+                                               MapToGroupName = g2 != null ? g2.Name : null
+                                           }).FirstOrDefaultAsync();
+
+                return updatedEntity;
             }
             catch (Exception ex)
             {

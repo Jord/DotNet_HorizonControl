@@ -6,10 +6,12 @@ using CentralLogModels;
 using HorizonControlCenterBAL;
 using HorizonControlCenterBAL.Interfaces;
 using HorizonControlCenterDAL;
+using HorizonControlCenterDAL.Entities;
 using HorizonControlCenterDAL.Interfaces;
 using HorizonControlCenterWebAPI.Security;
 using HorizonControlCenterWebAPI.Services.UserService;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography.X509Certificates;
 
 
@@ -26,7 +28,7 @@ namespace HorizonControlCenterWebAPI.Extensions
         {
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            services.AddDataAccessServices();
+            services.AddDataAccessServices(configuration);
             services.AddBusinessLogicServices();
 
             services.AddScoped<IUserService, UserService>();
@@ -82,8 +84,24 @@ namespace HorizonControlCenterWebAPI.Extensions
             return services;
         }
 
-        public static IServiceCollection AddDataAccessServices(this IServiceCollection services)
+        public static IServiceCollection AddDataAccessServices(this IServiceCollection services, IConfiguration configuration)
         {
+            // Register the DbContext with the configured connection string
+            services.AddDbContext<horizoncontrolContext>(options =>
+            {
+                var connectionString = configuration.GetConnectionString("HorizonControlDB")
+                    ?? configuration["Horizon:ConnectionStrings:HorizonControlDB"];
+
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException(
+                        "The ConnectionString property has not been initialized. " +
+                        "Ensure 'ConnectionStrings:HorizonControlDB' or 'Horizon:ConnectionStrings:HorizonControlDB' is configured in appsettings or Azure Configuration.");
+                }
+
+                options.UseNpgsql(connectionString);
+            });
+
             services.AddScoped<SuiteDAL>();
             services.AddScoped<GroupDAL>();
             services.AddScoped<SuitesApplicationDAL>();

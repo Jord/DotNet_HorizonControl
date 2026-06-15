@@ -21,5 +21,9 @@ namespace HorizonControlCenterModels
         public int? LastUpdatedByUserId { get; set; }
 
         public DateTime? LastUpdatedDate { get; set; }
+
+        public string? GroupName { get; set; }
+
+        public string? MapToGroupName { get; set; }
     }
 }

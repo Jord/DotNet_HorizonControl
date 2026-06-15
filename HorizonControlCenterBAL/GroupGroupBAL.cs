@@ -36,6 +36,17 @@ namespace HorizonControlCenterBAL
             const string methodName = nameof(CreateAsync);
             try
             {
+                // Validate required properties
+                if (model.GroupId == Guid.Empty)
+                {
+                    return Custom.CreateError<GroupGroupModel>("400", "GroupGroup - create - GroupId is required and cannot be empty", obj: null);
+                }
+
+                if (model.MapToGroupId == Guid.Empty)
+                {
+                    return Custom.CreateError<GroupGroupModel>("400", "GroupGroup - create - MapToGroupId is required and cannot be empty", obj: null);
+                }
+
                 GroupGroupModel? existing = await _dal.GetExistingGroupGroupAsync(model);
                 if (existing == null)
                 {
@@ -68,6 +79,17 @@ namespace HorizonControlCenterBAL
             const string methodName = nameof(UpdateAsync);
             try
             {
+                // Validate required properties
+                if (model.GroupId == Guid.Empty)
+                {
+                    return Custom.CreateError<GroupGroupModel>("400", "GroupGroup - update - GroupId is required and cannot be empty", obj: null);
+                }
+
+                if (model.MapToGroupId == Guid.Empty)
+                {
+                    return Custom.CreateError<GroupGroupModel>("400", "GroupGroup - update - MapToGroupId is required and cannot be empty", obj: null);
+                }
+
                 var existing = await _dal.GetByIdAsync(id);
                 if (existing == null)
                 {

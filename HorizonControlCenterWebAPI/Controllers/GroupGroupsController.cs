@@ -31,7 +31,7 @@ namespace HorizonControlCenterWebAPI.Controllers
         [HttpGet]
         [SwaggerOperation(
             Summary = "Get all group-group mappings",
-            Description = "Retrieves a list of all group-group mapping records from the system."
+            Description = "Retrieves a list of all group-group mapping records from the system. Each record includes GroupName and MapToGroupName for easier identification."
         )]
         public async Task<ActionResult<List<GroupGroupModel>>> GetAsync()
         {
@@ -56,7 +56,7 @@ namespace HorizonControlCenterWebAPI.Controllers
         [HttpGet("{id}")]
         [SwaggerOperation(
             Summary = "Get a group-group mapping by ID",
-            Description = "Retrieves a specific group-group mapping record identified by its GUID."
+            Description = "Retrieves a specific group-group mapping record identified by its GUID. The response includes GroupName and MapToGroupName for easier identification."
         )]
         public async Task<ActionResult<GroupGroupModel>> GetByIdAsync(Guid id)
         {
@@ -83,8 +83,12 @@ namespace HorizonControlCenterWebAPI.Controllers
         [HttpPost]
         [SwaggerOperation(
             Summary = "Create a new group-group mapping",
-            Description = "Creates a new group-group mapping record in the system with the provided details."
+            Description = "Creates a new group-group mapping record in the system with the provided details. The response includes GroupName and MapToGroupName for easier identification."
         )]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GlobalResponseModel<GroupGroupModel>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<GlobalResponseModel<GroupGroupModel>>> PostAsync(
             [SwaggerParameter(Description = "The group-group mapping data to create.", Required = true)] GroupGroupDTO model)
         {
@@ -99,6 +103,9 @@ namespace HorizonControlCenterWebAPI.Controllers
 
                 if (result == null)
                     return StatusCode(StatusCodes.Status500InternalServerError, Custom.CreateError<GroupGroupModel>("500", "Unexpected error"));
+
+                if (result.Status == "400")
+                    return BadRequest(result);
 
                 if (result.Status == "409")
                     return Conflict(result);
@@ -123,8 +130,12 @@ namespace HorizonControlCenterWebAPI.Controllers
         [HttpPut]
         [SwaggerOperation(
             Summary = "Update a group-group mapping",
-            Description = "Updates an existing group-group mapping record identified by its GUID with the provided details."
+            Description = "Updates an existing group-group mapping record identified by its GUID with the provided details. The response includes GroupName and MapToGroupName for easier identification."
         )]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GlobalResponseModel<GroupGroupModel>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<GlobalResponseModel<GroupGroupModel>>> PutAsync(
             Guid id,
             [SwaggerParameter(Description = "The group-group mapping data to update.", Required = true)] GroupGroupDTO model)
@@ -140,6 +151,9 @@ namespace HorizonControlCenterWebAPI.Controllers
 
                 if (result == null)
                     return StatusCode(StatusCodes.Status500InternalServerError, Custom.CreateError<GroupGroupModel>("500", "Unexpected error"));
+
+                if (result.Status == "400")
+                    return BadRequest(result);
 
                 if (result.Status == "404")
                     return NotFound(result);

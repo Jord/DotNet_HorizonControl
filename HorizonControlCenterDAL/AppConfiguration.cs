@@ -11,26 +11,26 @@ namespace HorizonControlCenterDAL
 {
     public class AppConfiguration
     {
-        private static DbContextOptionsBuilder<horizoncontrolContext>? opsBuilder { get; set; }
-        private static DbContextOptions<horizoncontrolContext>? dbOptions { get; set; }
-        public static DbContextOptions<horizoncontrolContext> ngsqlConnectionOptions()
+        private static DbContextOptionsBuilder<horizoncontrolContext>? OpsBuilder { get; set; }
+        private static DbContextOptions<horizoncontrolContext>? DbOptions { get; set; }
+        
+        public static DbContextOptions<horizoncontrolContext> NgsqlConnectionOptions(IConfiguration configuration)
         {
-            var configBuilder = new ConfigurationBuilder();
+            var conStrSetting = configuration.GetConnectionString("HorizonControlDB")
+                ?? configuration["Horizon:ConnectionStrings:HorizonControlDB"];
 
-            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var defpath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
-            configBuilder.AddJsonFile(defpath, false);// NOT OPTIONAL HAS TO BE THERE
+            if (string.IsNullOrEmpty(conStrSetting))
+            {
+                throw new InvalidOperationException(
+                    "The ConnectionString property has not been initialized. " +
+                    "Ensure 'ConnectionStrings:HorizonControlDB' or 'Horizon:ConnectionStrings:HorizonControlDB' is configured in appsettings.");
+            }
 
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "appsettings." + environment + ".json");
-            configBuilder.AddJsonFile(path, true);// NOT OPTIONAL HAS TO BE THERE
+            OpsBuilder = new DbContextOptionsBuilder<horizoncontrolContext>();
+            OpsBuilder.UseNpgsql(conStrSetting);
+            DbOptions = OpsBuilder.Options;
 
-            var root = configBuilder.Build();
-            var conStrSetting = root.GetSection("ConnectionStrings:HORIZOCONTROLDB");
-            opsBuilder = new DbContextOptionsBuilder<horizoncontrolContext>();
-            opsBuilder.UseNpgsql(conStrSetting.Value);
-            dbOptions = opsBuilder.Options;
-
-            return dbOptions;
+            return DbOptions;
         }
     }
 }

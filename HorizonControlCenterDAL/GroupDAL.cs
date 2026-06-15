@@ -20,10 +20,10 @@ namespace HorizonControlCenterDAL
         private readonly horizoncontrolContext _context;
         private readonly IMapper _mapper;
         private readonly string _className;
-        public GroupDAL(IHttpContextAccessor httpContextAccessor, IMapper mapper)
+        public GroupDAL(horizoncontrolContext context, IMapper mapper)
         {
-            _context = new horizoncontrolContext(AppConfiguration.ngsqlConnectionOptions());
-            _mapper = mapper;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _className = GetType().Name;
         }
 

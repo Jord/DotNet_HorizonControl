@@ -25,7 +25,7 @@ namespace HorizonControlCenterDAL
             configBuilder.AddJsonFile(path, true);// NOT OPTIONAL HAS TO BE THERE
 
             var root = configBuilder.Build();
-            var conStrSetting = root.GetSection("ConnectionStrings:HORIZOCONTROLCENTERDB");
+            var conStrSetting = root.GetSection("ConnectionStrings:HORIZOCONTROLDB");
             opsBuilder = new DbContextOptionsBuilder<horizoncontrolContext>();
             opsBuilder.UseNpgsql(conStrSetting.Value);
             dbOptions = opsBuilder.Options;

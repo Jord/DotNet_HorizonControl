@@ -1,4 +1,5 @@
 ﻿using HorizonControlCenterWebAPI.Security;
+using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 
 namespace HorizonControlCenterWebAPI.Services.UserService
@@ -6,10 +7,20 @@ namespace HorizonControlCenterWebAPI.Services.UserService
     public class UserService : IUserService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMemoryCache _cache;
+        private readonly IAuthUserContext _authUserContext;
 
-        public UserService(IHttpContextAccessor httpContextAccessor)
+        public string[]? Roles { get; set; }
+
+        public UserService(
+             IHttpContextAccessor httpContextAccessor,
+             IMemoryCache cache,
+             IAuthUserContext authUserContext
+         )
         {
             this._httpContextAccessor = httpContextAccessor;
+            _cache = cache;
+            _authUserContext = authUserContext;
         }
         public int GetGlobalUserID()
         {
@@ -44,12 +55,19 @@ namespace HorizonControlCenterWebAPI.Services.UserService
 
         public AuthUser GetUserInfo()
         {
-            AuthUser user = new AuthUser();
-            user.UserName = GetUserName();
-            user.UserFullName = GetUserFullName();
-            user.UserEmail = GetUserEmail();
-            user.UserId = GetGlobalUserID();
-            return user;
+            if (_httpContextAccessor.HttpContext != null)
+            {
+                return new AuthUser
+                {
+                    UserName = GetUserName(),
+                    UserFullName = GetUserFullName(),
+                    UserEmail = GetUserEmail(),
+                    UserId = GetGlobalUserID(),
+                    Roles = GetRoles(),
+                };
+            }
+            else
+                return _authUserContext.CurrentUser;
         }
 
         public string GetUserName()
@@ -60,6 +78,19 @@ namespace HorizonControlCenterWebAPI.Services.UserService
                 result = CryptoUtill.DecryptStringAES(_httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier));
             }
             return result;
+        }
+
+        public string[]? GetRoles()
+        {
+            if (_httpContextAccessor.HttpContext != null)
+            {
+                var rolesClaimValues = _httpContextAccessor.HttpContext.User.FindAll(ClaimTypes.Role);
+                if (rolesClaimValues != null && rolesClaimValues.Any())
+                {
+                    return rolesClaimValues.Select(c => c.Value).ToArray();
+                }
+            }
+            return null;
         }
     }
 }

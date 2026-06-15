@@ -7,6 +7,7 @@ using HorizonControlCenterBAL;
 using HorizonControlCenterBAL.Interfaces;
 using HorizonControlCenterDAL;
 using HorizonControlCenterDAL.Interfaces;
+using HorizonControlCenterWebAPI.Security;
 using HorizonControlCenterWebAPI.Services.UserService;
 using Microsoft.Extensions.DependencyInjection;
 using System.Security.Cryptography.X509Certificates;
@@ -63,8 +64,7 @@ namespace HorizonControlCenterWebAPI.Extensions
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
             services.AddMemoryCache();
-            //services.AddScoped<IUserService, UserService>();
-           // services.AddScoped<IAuthUserContext, AuthUserContext>();
+            services.AddScoped<IAuthUserContext, AuthUserContext>();
             return services;
         }
         public static IServiceCollection AddBusinessLogicServices(this IServiceCollection services)
